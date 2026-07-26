@@ -1,0 +1,149 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --muted: 221.2 63.3% 97.8%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 221.2 83.2% 53.3%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.3% 65.1%;
+    --accent: 217.2 91.2% 59.8%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 212.7 26.8% 83.9%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* SweetAlert2 con el tema de la app.
+   Se usan las mismas variables que el resto de componentes, así el modo
+   oscuro no necesita reglas aparte. */
+.balance-popup {
+  border-radius: calc(var(--radius) + 0.25rem);
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 20px 45px -12px rgb(0 0 0 / 0.28);
+  padding: 1.75rem 1.5rem 1.25rem;
+}
+
+.balance-title {
+  font-size: 1.15rem !important;
+  font-weight: 650;
+  color: hsl(var(--foreground));
+  padding: 0;
+}
+
+.balance-text {
+  font-size: 0.9rem !important;
+  color: hsl(var(--muted-foreground));
+  margin-top: 0.5rem !important;
+}
+
+.balance-actions {
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+.balance-btn {
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.55rem 1.1rem;
+  border: 1px solid transparent;
+  transition: opacity 0.15s, background-color 0.15s;
+  cursor: pointer;
+}
+.balance-btn:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+.balance-btn-confirm {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+.balance-btn-confirm:hover { opacity: 0.9; }
+
+.balance-btn-peligro {
+  background: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+}
+.balance-btn-peligro:hover { opacity: 0.9; }
+
+.balance-btn-cancel {
+  background: transparent;
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border));
+}
+.balance-btn-cancel:hover { background: hsl(var(--muted)); }
+
+.balance-icon { border-width: 3px; margin-bottom: 0.75rem; }
+
+/* Detalle del elemento afectado dentro de una confirmación */
+.balance-detalle {
+  margin-top: 0.85rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius);
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  text-align: left;
+  font-size: 0.85rem;
+}
+.balance-detalle strong { color: hsl(var(--foreground)); font-weight: 600; }
+.balance-detalle .meta { color: hsl(var(--muted-foreground)); font-size: 0.78rem; margin-top: 0.15rem; }
+
+/* Toasts */
+.balance-toast {
+  border-radius: var(--radius);
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 10px 25px -8px rgb(0 0 0 / 0.22);
+}
+.balance-toast-title { font-size: 0.9rem !important; font-weight: 600; color: hsl(var(--foreground)); }
+.balance-toast-text { font-size: 0.8rem !important; color: hsl(var(--muted-foreground)); }

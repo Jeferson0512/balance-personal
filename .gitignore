@@ -1,0 +1,20 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Extractos bancarios: nunca deben acabar en el repo.
+# El histórico ya migrado vive en src/datos/historico.js.
+*.xlsx
+*.xls
+*.sqlite
+*.db
+EECC*.pdf
+Reporte*.pdf
