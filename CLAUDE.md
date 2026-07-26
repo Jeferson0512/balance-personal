@@ -8,6 +8,21 @@ Contexto para el asistente. La documentación completa está en `docs/`.
 - `docs/09-pendientes.md` — qué falta y cómo saber que está terminado.
 - `docs/08-modelo-datos-explicado.md` — el porqué de cada tabla y columna.
 
+## Skills — no son opcionales
+
+En `.claude/skills/`. Se aplican solas según lo que se esté haciendo:
+
+| Skill | Cuándo |
+|---|---|
+| `preparar-entorno` | Al clonar en una máquina nueva o si falla algo por dependencias. |
+| `diseno-de-componentes` | Al crear o tocar **cualquier** componente de interfaz. |
+| `cambio-de-modelo` | Al añadir, quitar o cambiar un campo, entidad o catálogo. |
+| `mantener-documentacion` | Al **terminar** cualquier cambio. |
+
+`diseno-de-componentes` solo se salta si el usuario pide un rediseño — y
+entonces se actualiza la skill con las reglas nuevas, o el proyecto vuelve a
+la incoherencia.
+
 ## Qué es
 
 App de finanzas personales sobre un motor de **partida doble**. La rigurosidad

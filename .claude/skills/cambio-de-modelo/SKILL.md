@@ -5,6 +5,28 @@ description: Usar SIEMPRE que se añada, elimine o modifique un campo, tabla, ca
 
 # Cambio de modelo de datos
 
+## El modelo aún no existe: está vivo
+
+La base de datos de `docs/06-esquema-base-datos.sql` **todavía no se ha
+creado**. No hay servidor, no hay migraciones, no hay datos en producción.
+Los datos viven en `localStorage`.
+
+Eso significa dos cosas:
+
+1. **El esquema se edita libremente.** No hace falta `ALTER TABLE` ni
+   migración: se corrige el DDL y ya. Aprovéchalo mientras dure.
+2. **Por eso mismo se desincroniza con facilidad.** Como nada falla al
+   olvidarlo — el código sigue funcionando con `localStorage` — el esquema se
+   queda atrás sin que nadie lo note, hasta el día en que se cree la base y
+   resulte que describe un modelo que ya no existe.
+
+**Regla:** cualquier campo, entidad o catálogo que cambie en el código se
+refleja en el esquema **en el mismo cambio**, aunque la base no exista aún.
+El esquema no es documentación de algo hecho: es la especificación de lo que
+se va a crear, y solo sirve si está al día.
+
+---
+
 Un cambio de modelo toca **tres sitios**. Que uno quede atrás convierte la
 documentación en mentira, y una documentación que miente es peor que no
 tenerla: el siguiente que llegue confiará en ella.

@@ -117,6 +117,23 @@ filtrar el historial por etiqueta.
 
 ---
 
+### 2.5 El catálogo de instrumentos es fijo
+
+**Qué pasa:** al crear una cuenta puedes **elegir** su tipo de instrumento
+(Efectivo, Billetera digital, Inversión…), pero no puedes **añadir uno nuevo**:
+los 9 tipos viven hardcodeados en `src/datos/instrumentos.js`.
+
+**Por qué importa:** aparecerán instrumentos que hoy no existen — un fondo
+mutuo, una cripto, una cuenta en dólares. Hoy habría que tocar código.
+
+Lo mismo aplica a `src/datos/instituciones.js` (BCP, YAPE, Tyba…): el catálogo
+de bancos y servicios tampoco crece desde la app.
+
+**Terminado cuando:** se puede crear un tipo de instrumento y una institución
+desde la interfaz, y persisten como el resto de datos.
+
+---
+
 ## Prioridad 3 — Que el sistema aprenda
 
 ### 3.1 Reglas de categorización editables
@@ -261,3 +278,4 @@ Para que nadie lo rehaga por no saber que ya está resuelto:
 - Dashboard con periodos naturales navegables (día, semana, mes, año)
 - Diálogos de confirmación en todas las acciones destructivas
 - Saldos de apertura por cuenta, editables desde la interfaz
+- Skills del proyecto en `.claude/skills/`: entorno, diseño, modelo y documentación
