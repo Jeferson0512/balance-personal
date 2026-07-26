@@ -5,7 +5,7 @@ import {
 } from "recharts";
 import {
   TrendingUp, TrendingDown, Wallet, CreditCard, ArrowUpRight, ArrowDownLeft,
-  Users, Minus, PiggyBank,
+  Users, Minus, PiggyBank, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { patrimonioNeto, saldoCrudo, saldoCrudoConSub, esDebitoNormal } from "../motor/motor.js";
 import { fmtPEN as fmt } from "../datos/semillas.js";
@@ -17,12 +17,117 @@ import { esLiquido, inferirInstrumento } from "../datos/instrumentos.js";
    principal lleva su variación respecto al periodo anterior, y el color se
    reserva para señalar (bien / mal), nunca para decorar. */
 
-const PERIODOS = [
-  { id: "1m", label: "30 días", dias: 30 },
-  { id: "3m", label: "3 meses", dias: 90 },
-  { id: "6m", label: "6 meses", dias: 180 },
-  { id: "todo", label: "Todo", dias: null },
+/* Periodos naturales, no ventanas móviles.
+
+   "Últimos 90 días" no responde a "¿cómo voy?": nadie presupuesta en ventanas
+   deslizantes. Se navega por mes y por año, y cada cifra se compara con el
+   mismo periodo anterior (junio vs mayo, 2026 vs 2025). */
+const MODOS = [
+  { id: "dia", label: "Día" },
+  { id: "semana", label: "Semana" },
+  { id: "mes", label: "Mes" },
+  { id: "anio", label: "Año" },
+  { id: "todo", label: "Todo" },
 ];
+
+/** Lunes de la semana a la que pertenece la fecha (semana ISO, no domingo). */
+function inicioSemana(fecha) {
+  const d = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+  const diaSemana = (d.getDay() + 6) % 7; // lunes = 0
+  d.setDate(d.getDate() - diaSemana);
+  return d;
+}
+
+function sumarDias(fecha, n) {
+  const d = new Date(fecha);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+
+/** Límites [desde, hasta) del periodo, y del equivalente anterior. */
+function rangoDe(modo, ancla) {
+  if (modo === "todo") return { desde: null, hasta: null, previoDesde: null, previoHasta: null };
+
+  if (modo === "dia") {
+    const d = new Date(ancla.getFullYear(), ancla.getMonth(), ancla.getDate());
+    return {
+      desde: d,
+      hasta: sumarDias(d, 1),
+      previoDesde: sumarDias(d, -1),
+      previoHasta: d,
+    };
+  }
+
+  if (modo === "semana") {
+    const lunes = inicioSemana(ancla);
+    return {
+      desde: lunes,
+      hasta: sumarDias(lunes, 7),
+      previoDesde: sumarDias(lunes, -7),
+      previoHasta: lunes,
+    };
+  }
+
+  if (modo === "anio") {
+    const a = ancla.getFullYear();
+    return {
+      desde: new Date(a, 0, 1),
+      hasta: new Date(a + 1, 0, 1),
+      previoDesde: new Date(a - 1, 0, 1),
+      previoHasta: new Date(a, 0, 1),
+    };
+  }
+
+  const a = ancla.getFullYear();
+  const m = ancla.getMonth();
+  return {
+    desde: new Date(a, m, 1),
+    hasta: new Date(a, m + 1, 1),
+    previoDesde: new Date(a, m - 1, 1),
+    previoHasta: new Date(a, m, 1),
+  };
+}
+
+function etiquetaPeriodo(modo, ancla) {
+  if (modo === "todo") return "Todo el historial";
+  if (modo === "anio") return String(ancla.getFullYear());
+
+  if (modo === "dia") {
+    return ancla.toLocaleDateString("es-ES", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+    });
+  }
+
+  if (modo === "semana") {
+    const lunes = inicioSemana(ancla);
+    const domingo = sumarDias(lunes, 6);
+    const mismoMes = lunes.getMonth() === domingo.getMonth();
+    const ini = lunes.toLocaleDateString("es-ES", { day: "numeric", ...(mismoMes ? {} : { month: "short" }) });
+    const fin = domingo.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
+    return `${ini} – ${fin}`;
+  }
+
+  return ancla.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+}
+
+/** Texto de la comparación: debe decir contra qué periodo se compara. */
+function sufijoDe(modo) {
+  return {
+    dia: "vs día anterior",
+    semana: "vs semana anterior",
+    mes: "vs mes anterior",
+    anio: "vs año anterior",
+  }[modo] || "vs periodo anterior";
+}
+
+function desplazar(modo, ancla, pasos) {
+  if (modo === "dia") return sumarDias(ancla, pasos);
+  if (modo === "semana") return sumarDias(ancla, pasos * 7);
+  const d = new Date(ancla);
+  if (modo === "anio") d.setFullYear(d.getFullYear() + pasos);
+  else d.setMonth(d.getMonth() + pasos);
+  return d;
+}
 
 // Paleta para categorías: tonos distinguibles sin saturar la vista.
 const COLORES = ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#06b6d4", "#6366f1", "#84cc16"];
@@ -31,20 +136,20 @@ const fmtCompacto = (n) =>
   Math.abs(n) >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(Math.round(n));
 
 export default function DashboardFinanciero({ transacciones, cuentas }) {
-  /* Con un histórico antiguo, arrancar en "3 meses" muestra la pantalla en
-     cero y parece que la app está rota. Se elige el periodo más corto que
-     tenga datos. */
-  const periodoInicial = useMemo(() => {
-    const hoy = Date.now();
-    const encontrado = PERIODOS.find(
-      (p) =>
-        p.dias &&
-        transacciones.some((t) => hoy - new Date(t.fecha).getTime() <= p.dias * 86400000)
+  const [modo, setModo] = useState("mes");
+
+  /* Se ancla en el último mes con movimientos, no en hoy: si el último
+     registro es de hace tres meses, abrir en un mes vacío parece un error. */
+  const anclaInicial = useMemo(() => {
+    if (!transacciones.length) return new Date();
+    const ultima = transacciones.reduce(
+      (max, t) => (t.fecha > max ? t.fecha : max),
+      transacciones[0].fecha
     );
-    return encontrado?.id || "todo";
+    return new Date(ultima);
   }, [transacciones]);
 
-  const [periodo, setPeriodo] = useState(periodoInicial);
+  const [ancla, setAncla] = useState(anclaInicial);
 
   const movimientos = useMemo(() => transacciones.flatMap((t) => t.movimientos), [transacciones]);
   const { activos, pasivos, neto } = useMemo(
@@ -58,18 +163,17 @@ export default function DashboardFinanciero({ transacciones, cuentas }) {
     return mapa;
   }, [cuentas]);
 
-  const desde = useMemo(() => {
-    const dias = PERIODOS.find((p) => p.id === periodo)?.dias;
-    if (!dias) return null;
-    const d = new Date();
-    d.setDate(d.getDate() - dias);
-    return d;
-  }, [periodo]);
+  const rango = useMemo(() => rangoDe(modo, ancla), [modo, ancla]);
+  const sufijoComparacion = sufijoDe(modo);
+  const desde = rango.desde;
 
-  const enRango = useMemo(
-    () => (desde ? transacciones.filter((t) => new Date(t.fecha) >= desde) : transacciones),
-    [transacciones, desde]
-  );
+  const enRango = useMemo(() => {
+    if (!rango.desde) return transacciones;
+    return transacciones.filter((t) => {
+      const f = new Date(t.fecha);
+      return f >= rango.desde && f < rango.hasta;
+    });
+  }, [transacciones, rango]);
 
   /* Flujo del periodo y del periodo anterior de la misma duración: sin el
      anterior no hay con qué comparar. */
@@ -87,20 +191,17 @@ export default function DashboardFinanciero({ transacciones, cuentas }) {
     };
 
     const actual = sumar(enRango);
-    if (!desde) return { ...actual, previo: null };
+    if (!rango.previoDesde) return { ...actual, previo: null };
 
-    const dias = PERIODOS.find((p) => p.id === periodo).dias;
-    const inicioPrevio = new Date(desde);
-    inicioPrevio.setDate(inicioPrevio.getDate() - dias);
     const previo = sumar(
       transacciones.filter((t) => {
         const f = new Date(t.fecha);
-        return f >= inicioPrevio && f < desde;
+        return f >= rango.previoDesde && f < rango.previoHasta;
       })
     );
 
     return { ...actual, previo };
-  }, [enRango, transacciones, desde, periodo, tipoDeCuenta]);
+  }, [enRango, transacciones, rango, tipoDeCuenta]);
 
   /* Serie de patrimonio: se acumula el efecto de cada transacción sobre
      activos y pasivos en orden cronológico. */
@@ -130,10 +231,24 @@ export default function DashboardFinanciero({ transacciones, cuentas }) {
     return { delta, pct: inicio !== 0 ? (delta / Math.abs(inicio)) * 100 : null };
   }, [seriePatrimonio]);
 
-  /* Ingresos y gastos agrupados por mes. */
+  /* Ingresos y gastos por mes. Usa siempre los 12 meses hasta el ancla, no el
+     rango filtrado: en modo "Mes" una sola barra no dice nada, y el valor de
+     este gráfico está justo en comparar contra los meses vecinos. */
   const porMes = useMemo(() => {
+    const fin = new Date(ancla.getFullYear(), ancla.getMonth() + 1, 1);
+    const inicio = new Date(fin);
+    inicio.setMonth(inicio.getMonth() - 12);
+
+    const ventana =
+      modo === "todo"
+        ? transacciones
+        : transacciones.filter((t) => {
+            const f = new Date(t.fecha);
+            return f >= inicio && f < fin;
+          });
+
     const meses = new Map();
-    enRango.forEach((t) => {
+    ventana.forEach((t) => {
       const mes = t.fecha.slice(0, 7);
       if (!meses.has(mes)) meses.set(mes, { mes, ingresos: 0, gastos: 0 });
       t.movimientos.forEach((m) => {
@@ -149,7 +264,7 @@ export default function DashboardFinanciero({ transacciones, cuentas }) {
         etiqueta: new Date(m.mes + "-02").toLocaleDateString("es-ES", { month: "short" }),
         balance: m.ingresos - m.gastos,
       }));
-  }, [enRango, tipoDeCuenta]);
+  }, [transacciones, ancla, modo, tipoDeCuenta]);
 
   /* Gasto por categoría raíz: agrupar por padre evita un donut con 12 porciones. */
   const gastoPorCategoria = useMemo(() => {
@@ -233,30 +348,59 @@ export default function DashboardFinanciero({ transacciones, cuentas }) {
 
   return (
     <div className="space-y-4">
-      {/* Cabecera con selector de periodo */}
+      {/* Cabecera: qué periodo miras y cómo moverte por él */}
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">Resumen financiero</h1>
+        <div className="min-w-0">
+          <h1 className="text-xl font-semibold capitalize tracking-tight">
+            {etiquetaPeriodo(modo, ancla)}
+          </h1>
           <p className="text-sm text-muted-foreground">
             {enRango.length} movimiento{enRango.length === 1 ? "" : "s"}
-            {desde && ` desde el ${desde.toLocaleDateString("es-ES", { day: "numeric", month: "long" })}`}
           </p>
         </div>
 
-        <div className="flex rounded-lg border border-border overflow-hidden">
-          {PERIODOS.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => setPeriodo(p.id)}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                periodo === p.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-background text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-2">
+          {modo !== "todo" && (
+            <div className="flex items-center rounded-lg border border-border">
+              <button
+                onClick={() => setAncla(desplazar(modo, ancla, -1))}
+                className="px-2 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                aria-label="Periodo anterior"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setAncla(anclaInicial)}
+                className="border-x border-border px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
+                title="Volver al periodo más reciente"
+              >
+                Hoy
+              </button>
+              <button
+                onClick={() => setAncla(desplazar(modo, ancla, 1))}
+                className="px-2 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                aria-label="Periodo siguiente"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
+          <div className="flex overflow-hidden rounded-lg border border-border">
+            {MODOS.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => setModo(m.id)}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                  modo === m.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -327,6 +471,7 @@ export default function DashboardFinanciero({ transacciones, cuentas }) {
               titulo="Ingresos"
               valor={flujo.ingresos}
               previo={flujo.previo?.ingresos}
+              sufijo={sufijoComparacion}
               positivoEsBueno
             />
             <TarjetaFlujo
@@ -334,13 +479,18 @@ export default function DashboardFinanciero({ transacciones, cuentas }) {
               titulo="Gastos"
               valor={flujo.gastos}
               previo={flujo.previo?.gastos}
+              sufijo={sufijoComparacion}
               positivoEsBueno={false}
             />
           </div>
 
           {/* Balance mensual + composición del gasto */}
           <div className="grid gap-3 lg:grid-cols-5">
-            <Panel titulo="Ingresos y gastos por mes" className="lg:col-span-3">
+            <Panel
+              titulo="Ingresos y gastos por mes"
+              subtitulo={modo === "todo" ? undefined : "Últimos 12 meses"}
+              className="lg:col-span-3"
+            >
               {porMes.length ? (
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
@@ -492,7 +642,7 @@ function Panel({ titulo, subtitulo, className = "", children }) {
   );
 }
 
-function TarjetaFlujo({ icono: Icono, titulo, valor, previo, positivoEsBueno }) {
+function TarjetaFlujo({ icono: Icono, titulo, valor, previo, positivoEsBueno, sufijo }) {
   const hayComparacion = typeof previo === "number" && previo > 0;
   const delta = hayComparacion ? valor - previo : null;
   const pct = hayComparacion ? (delta / previo) * 100 : null;
@@ -505,7 +655,7 @@ function TarjetaFlujo({ icono: Icono, titulo, valor, previo, positivoEsBueno }) 
       </div>
       <div className="mt-1 text-2xl font-semibold tabular-nums tracking-tight">{fmt.format(valor)}</div>
       {hayComparacion ? (
-        <Delta valor={delta} pct={pct} sufijo="vs periodo anterior" invertirColor={!positivoEsBueno} className="mt-1.5" />
+        <Delta valor={delta} pct={pct} sufijo={sufijo} invertirColor={!positivoEsBueno} className="mt-1.5" />
       ) : (
         <div className="mt-1.5 text-xs text-muted-foreground">Sin periodo anterior para comparar</div>
       )}

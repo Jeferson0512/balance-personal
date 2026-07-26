@@ -227,7 +227,11 @@ export default function GestorCuentas({ cuentasData, transacciones }) {
         </button>
       </Panel>
 
-      <Panel titulo="Tu árbol de cuentas" icono={Wallet}>
+      <Panel
+        titulo="Tu árbol de cuentas"
+        subtitulo="La etiqueta gris indica el tipo de cuenta: si el dinero está disponible o inmovilizado"
+        icono={Wallet}
+      >
         <div className="space-y-5">
           {grupos.map(({ tipo: t, rows }) => (
             <div key={t}>
@@ -264,7 +268,10 @@ export default function GestorCuentas({ cuentasData, transacciones }) {
                           <span className={`truncate text-sm ${depth === 0 ? "font-medium" : "text-muted-foreground"}`}>
                             {cuenta.nombre}
                             {(cuenta.tipo === "activo" || cuenta.tipo === "pasivo") && (
-                              <span className="ml-1.5 rounded bg-muted px-1.5 py-0.5 text-xs font-normal text-muted-foreground">
+                              <span
+                                className="ml-1.5 rounded border border-border px-1.5 py-0.5 text-xs font-normal text-muted-foreground"
+                                title="Tipo de cuenta. Define si el dinero está disponible o inmovilizado; no es una etiqueta."
+                              >
                                 {instrumentoDe(inferirInstrumento(cuenta))?.nombre}
                               </span>
                             )}
