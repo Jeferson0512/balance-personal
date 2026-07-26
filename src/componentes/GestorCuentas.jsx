@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
 import { TIPOS, esDebitoNormal, saldoCrudo, saldoCrudoConSub } from "../motor/motor.js";
 import { CUENTAS_DEFAULT, TX_SEMILLA, fmtPEN as fmt } from "../datos/semillas.js";
-import { confirmarPeligro, avisoExito } from "../ui/dialogos.js";
+import { confirmarPeligro, avisoExito, avisoError, pedirApertura } from "../ui/dialogos.js";
+import { aperturaDe, aperturaSugerida, fechaSugerida, fijarApertura } from "../services/saldoApertura.js";
 import { PageHeader, Panel, Aviso } from "./ui";
 import { INSTRUMENTOS, tipoContableDe, inferirInstrumento, instrumentoDe } from "../datos/instrumentos.js";
-import { Plus, Wallet, Pencil, Check, Eye, EyeOff, CornerDownRight } from "lucide-react";
+import { Plus, Wallet, Pencil, Check, Eye, EyeOff, CornerDownRight, Landmark } from "lucide-react";
 
 function BotonIcono({ onClick, titulo, icono: Icono }) {
   return (
@@ -37,7 +38,7 @@ const OPCIONES_TIPO = [
 ];
 const slug = (s) => s.toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
-export default function GestorCuentas({ cuentasData, transacciones }) {
+export default function GestorCuentas({ cuentasData, transacciones, transaccionesTodas, setTransacciones }) {
   const [cuentasLocal, setCuentasLocal] = useState(CUENTAS_DEFAULT);
 
   const cuentas = cuentasData?.cuentas || cuentasLocal;
@@ -107,6 +108,42 @@ export default function GestorCuentas({ cuentasData, transacciones }) {
   function agregarSubDe(cuenta) {
     setTipo(cuenta.tipo); setIdPadre(cuenta.id); setNombre("");
     setMsg(`Agregando subcategoría dentro de "${cuenta.nombre}".`);
+  }
+
+  /* La apertura no se puede inferir: solo el usuario sabe cuánto tenía antes
+     de empezar a registrar. Se sugiere el importe que dejaría la cuenta en
+     cero, pero lo confirma él. */
+  async function abrirApertura(cuenta) {
+    if (!setTransacciones) {
+      avisoError("No disponible", "Esta pantalla no tiene acceso a las transacciones.");
+      return;
+    }
+
+    const actual = aperturaDe(transaccionesTodas, cuenta.id);
+    const sugerido = aperturaSugerida(transaccionesTodas, cuenta.id);
+    const fecha = actual?.fecha?.slice(0, 10) || fechaSugerida(transaccionesTodas, cuenta.id);
+
+    const { value } = await pedirApertura({
+      cuenta,
+      valorActual: actual?.apertura?.saldo ?? sugerido,
+      fecha,
+      sugerido,
+    });
+    if (value === undefined) return;
+
+    setTransacciones((prev) =>
+      fijarApertura(prev, {
+        idCuenta: cuenta.id,
+        saldo: value.saldo,
+        fecha: new Date(value.fecha).toISOString(),
+        cuentas,
+      })
+    );
+
+    avisoExito(
+      value.saldo ? "Saldo de apertura fijado" : "Apertura eliminada",
+      value.saldo ? `${cuenta.nombre}: ${fmt.format(value.saldo)}` : cuenta.nombre
+    );
   }
 
   async function restaurarPorDefecto() {
@@ -301,6 +338,13 @@ export default function GestorCuentas({ cuentasData, transacciones }) {
                         )}
                         {(cuenta.tipo === "ingreso" || cuenta.tipo === "gasto") && (
                           <BotonIcono onClick={() => agregarSubDe(cuenta)} titulo="Añadir subcategoría" icono={CornerDownRight} />
+                        )}
+                        {(cuenta.tipo === "activo" || cuenta.tipo === "pasivo") && (
+                          <BotonIcono
+                            onClick={() => abrirApertura(cuenta)}
+                            titulo="Saldo de apertura"
+                            icono={Landmark}
+                          />
                         )}
                         <BotonIcono
                           onClick={() => toggleActiva(cuenta.id)}

@@ -96,4 +96,45 @@ const toast = Swal.mixin({
   },
 });
 
+/**
+ * Pide el saldo de apertura de una cuenta.
+ * @returns {Promise<{value?: {saldo:number, fecha:string}}>} value undefined si se cancela
+ */
+export async function pedirApertura({ cuenta, valorActual, fecha, sugerido }) {
+  const { value } = await base.fire({
+    title: `Saldo de apertura · ${cuenta.nombre}`,
+    html: `
+      <p style="text-align:left">Cuánto tenías en esta cuenta <strong>antes</strong> del primer
+      movimiento registrado. Se guarda como un asiento contra patrimonio.</p>
+      ${
+        sugerido
+          ? `<div class="balance-detalle">
+               <strong>Sugerencia: ${sugerido.toFixed(2)}</strong>
+               <div class="meta">Es lo que dejaría la cuenta en cero. Ajústalo al importe real.</div>
+             </div>`
+          : ""
+      }
+      <div style="display:grid;gap:.6rem;margin-top:1rem;text-align:left">
+        <label style="font-size:.8rem;color:hsl(var(--muted-foreground))">Saldo
+          <input id="ap-saldo" type="number" step="0.01" value="${valorActual ?? ""}"
+                 class="balance-input" placeholder="0.00">
+        </label>
+        <label style="font-size:.8rem;color:hsl(var(--muted-foreground))">Fecha
+          <input id="ap-fecha" type="date" value="${fecha}" class="balance-input">
+        </label>
+      </div>
+      <p style="font-size:.75rem;margin-top:.75rem;color:hsl(var(--muted-foreground))">
+        Déjalo en 0 para eliminar la apertura.</p>`,
+    showCancelButton: true,
+    confirmButtonText: "Guardar",
+    cancelButtonText: "Cancelar",
+    focusCancel: false,
+    preConfirm: () => ({
+      saldo: parseFloat(document.getElementById("ap-saldo").value) || 0,
+      fecha: document.getElementById("ap-fecha").value,
+    }),
+  });
+  return { value };
+}
+
 export { Swal };

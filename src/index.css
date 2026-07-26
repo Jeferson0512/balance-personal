@@ -147,3 +147,20 @@
 }
 .balance-toast-title { font-size: 0.9rem !important; font-weight: 600; color: hsl(var(--foreground)); }
 .balance-toast-text { font-size: 0.8rem !important; color: hsl(var(--muted-foreground)); }
+
+/* Campos dentro de un diálogo */
+.balance-input {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-size: 0.9rem;
+}
+.balance-input:focus {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 1px;
+}

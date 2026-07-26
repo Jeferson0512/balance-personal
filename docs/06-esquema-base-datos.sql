@@ -109,9 +109,21 @@ CREATE TABLE transaccion (
     eliminada_en      TIMESTAMPTZ,
     eliminada_motivo  TEXT,
 
+    -- Saldo de apertura: cuánto había en la cuenta antes del primer
+    -- movimiento registrado. Un extracto trae movimientos, nunca el punto de
+    -- partida, así que sin esto una cuenta con historia previa queda en
+    -- negativo (Efectivo salía en -S/2.532 solo por eso).
+    -- Se modela como transacción y no como columna de `cuenta` para que entre
+    -- en el balance, respete la partida doble y se pueda corregir o borrar.
+    apertura_de_cuenta UUID REFERENCES cuenta(id) ON DELETE CASCADE,
+
     creado_en     TIMESTAMPTZ NOT NULL DEFAULT now(),
-    creado_por    TEXT NOT NULL DEFAULT 'manual'  -- manual | import | recurrencia | cuota
+    creado_por    TEXT NOT NULL DEFAULT 'manual'  -- manual | import | recurrencia | cuota | apertura
 );
+
+-- Una cuenta tiene como mucho una apertura: refijarla sustituye, no acumula.
+CREATE UNIQUE INDEX idx_tx_apertura_unica ON transaccion (apertura_de_cuenta)
+    WHERE apertura_de_cuenta IS NOT NULL AND eliminada_en IS NULL;
 
 CREATE INDEX idx_tx_usuario_fecha ON transaccion (id_usuario, fecha DESC)
     WHERE eliminada_en IS NULL;

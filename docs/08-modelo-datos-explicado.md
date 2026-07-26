@@ -86,6 +86,7 @@ erDiagram
         timestamptz eliminada_en "borrado logico"
         uuid id_compra_financiada FK
         int numero_cuota
+        uuid apertura_de_cuenta FK "saldo inicial"
     }
 
     movimiento {
@@ -167,7 +168,8 @@ un modelo de partida simple, y también el que hace imposible descuadrar.
 | `contraparte_direccion` | `enviado` / `recibido`. El extracto siempre da el monto en positivo; la dirección es la que pone el signo en pantalla. |
 | `eliminada_en` | **Borrado lógico.** Nada se destruye: se marca. Un borrado accidental de 129 movimientos importados no puede ser irreversible. Todo cálculo filtra `WHERE eliminada_en IS NULL`. |
 | `eliminada_motivo` | Agrupa la papelera en lotes (*"Limpieza de 2026"*) para poder restaurar en bloque, no de una en una. |
-| `creado_por` | `manual` / `import` / `recurrencia` / `cuota`. Sin esto no se puede responder *"¿qué entró en la importación de ayer?"* ni deshacerla. |
+| `creado_por` | `manual` / `import` / `recurrencia` / `cuota` / `apertura`. Sin esto no se puede responder *"¿qué entró en la importación de ayer?"* ni deshacerla. |
+| `apertura_de_cuenta` | Marca esta transacción como el **saldo de apertura** de una cuenta. Un extracto trae movimientos, nunca cuánto había antes de empezar: sin apertura, una cuenta con historia previa queda en negativo. Pasó con Efectivo, que salía en −S/2,532 solo porque su punto de partida no existía en Money Manager. Se modela como transacción y **no como columna de `cuenta`** para que entre en el balance, respete la partida doble y se pueda corregir o borrar como cualquier otra. El índice parcial garantiza una sola apertura viva por cuenta: refijarla sustituye, no acumula. |
 
 ---
 

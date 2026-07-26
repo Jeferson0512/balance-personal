@@ -22,22 +22,19 @@ Un pendiente solo se cierra cuando se puede hacer desde la app.
 
 ## Prioridad 1 — Datos incorrectos ahora mismo
 
-### 1.1 La cuenta Efectivo sale en −S/ 2,532
+### 1.1 Fijar el saldo de apertura de las cuentas restantes
 
-**Qué pasa:** Money Manager nunca guardó el saldo de apertura, solo los
-movimientos. Cada gasto resta de Efectivo, pero nunca hubo un asiento que la
-cargara con lo que ya había.
+**Resuelto el mecanismo.** Hay un botón por cuenta en *Cuentas* que fija el
+saldo de apertura: genera un asiento contra patrimonio, sugiere el importe que
+dejaría la cuenta en cero y permite corregirlo o quitarlo.
 
-**No es un bug de conversión** — es información que no existe en el origen. No
-se puede inventar.
-
-**Qué hacer:** registrar el saldo real al 1 de mayo de 2024 como transacción
-contra `pt-inicial` (patrimonio). Idealmente con una pantalla de "saldo de
-apertura" por cuenta, que sirva también para YAPE, BCP y las demás cuando se
-importe un extracto que empieza a mitad de la historia.
+**Falta el dato.** Solo el titular sabe cuánto tenía realmente antes de empezar
+a registrar. Efectivo necesita ~S/2.532 según la sugerencia, pero hay que
+confirmar la cifra real; lo mismo al importar un extracto que empieza a mitad
+de la historia.
 
 **Terminado cuando:** ninguna cuenta de activo muestra saldo negativo sin
-motivo real, y existe una forma de fijar la apertura desde la app.
+motivo real.
 
 ---
 
@@ -263,3 +260,4 @@ Para que nadie lo rehaga por no saber que ya está resuelto:
 - Tipos de instrumento y separación disponible / invertido
 - Dashboard con periodos naturales navegables (día, semana, mes, año)
 - Diálogos de confirmación en todas las acciones destructivas
+- Saldos de apertura por cuenta, editables desde la interfaz

@@ -147,7 +147,8 @@ export default function App() {
       case "transacciones":
         return <GestorTransaccionesState transacciones={transacciones} setTransacciones={setTransacciones} cuentas={cuentas} />;
       case "cuentas":
-        return <GestorCuentasState cuentas={cuentas} setCuentas={setCuentas} transacciones={activas} />;
+        return <GestorCuentasState cuentas={cuentas} setCuentas={setCuentas} transacciones={activas}
+          transaccionesTodas={transacciones} setTransacciones={setTransacciones} />;
       case "importar":
         return <GestorImportaciones transacciones={transacciones} setTransacciones={setTransacciones} cuentas={cuentas} setCuentas={setCuentas} />;
       case "graficos":
@@ -213,6 +214,13 @@ function GestorTransaccionesState({ transacciones, setTransacciones, cuentas }) 
   return <GestorTransacciones transactionsData={{ transacciones, setTransacciones }} cuentasData={{ cuentas }} />;
 }
 
-function GestorCuentasState({ cuentas, setCuentas, transacciones }) {
-  return <GestorCuentas cuentasData={{ cuentas, setCuentas }} transacciones={transacciones} />;
+function GestorCuentasState({ cuentas, setCuentas, transacciones, transaccionesTodas, setTransacciones }) {
+  return (
+    <GestorCuentas
+      cuentasData={{ cuentas, setCuentas }}
+      transacciones={transacciones}
+      transaccionesTodas={transaccionesTodas}
+      setTransacciones={setTransacciones}
+    />
+  );
 }
