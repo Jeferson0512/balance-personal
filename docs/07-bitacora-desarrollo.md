@@ -291,6 +291,22 @@ defecto" que borraba el plan de cuentas entero de un clic.
 
 ---
 
+## 6.bis Fin de la sesión del 26 de julio
+
+El desarrollo se detuvo porque la máquina se quedaba en otra ubicación. **Todo
+quedó commiteado y publicado** en `github.com/Jeferson0512/balance-personal`;
+no hay trabajo a medias sin guardar.
+
+Lo que estaba a punto de empezarse y no se hizo: **las etiquetas** (pendiente
+2.4). Se pueden crear pero no asignar a ninguna transacción, así que la
+pantalla no sirve de nada. La propuesta de etiquetas iniciales basada en los
+datos reales está registrada ahí, sin implementar.
+
+Para retomar, ver la sección "Por dónde retomar" de
+[`09-pendientes.md`](09-pendientes.md).
+
+---
+
 ## 7. Estado actual
 
 **Funcionando con interfaz:**

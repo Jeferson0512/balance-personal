@@ -9,6 +9,42 @@ eso, un backlog es una lista de deseos.
 
 ---
 
+## Por dónde retomar
+
+El desarrollo se interrumpió con la máquina cambiando de sitio. Todo está
+commiteado y publicado; no hay trabajo a medias sin guardar.
+
+**Primero, al llegar a la máquina nueva:**
+
+```bash
+git clone https://github.com/Jeferson0512/balance-personal.git
+cd balance-personal
+node --version        # requiere >= 18
+npm install
+npm run dev
+```
+
+Ver la skill `preparar-entorno` para las trampas conocidas.
+
+**Lo primero que conviene hacer, por orden:**
+
+1. **Fijar el saldo de apertura del Efectivo** (§1.1). Es un dato que solo tú
+   sabes y hasta que no esté, el patrimonio que muestra la app es falso. Son
+   dos minutos: *Cuentas → icono de banco junto a Efectivo*.
+2. **Etiquetas** (§2.4). Es lo que estaba a punto de empezarse. Ahora mismo se
+   pueden crear pero **no asignar a nada**, así que la pantalla no sirve para
+   nada. Hay una propuesta pendiente de juego inicial basado en los datos
+   reales (ver §2.4).
+3. **Edición completa de transacciones** (§2.2). Con 1.760 movimientos
+   importados y S/1.236 en "Gastos varios", sin esto no hay forma de corregir
+   la categorización.
+
+**Lo que NO conviene tocar primero:** la migración a base de datos (§6.1). El
+esquema está listo pero arrastra backend, autenticación y hosting; es un
+proyecto en sí mismo, no un siguiente paso.
+
+---
+
 ## Aviso: construido ≠ terminado
 
 Hay lógica probada que **no tiene interfaz**. Ya pasó dos veces en el proyecto
@@ -107,13 +143,35 @@ lo contempla.
 
 **Qué pasa:** se crean, se listan y se borran, pero **no hay forma de marcar
 una transacción con una etiqueta** desde el historial. El modelo lo soporta
-(`tx.etiquetas`), la interfaz no.
+(`tx.etiquetas`), la interfaz no. Hoy la pantalla es un cajón sin uso.
 
 Es el diferenciador que la documentación del proyecto reservaba para el MLP y
 sigue sin existir.
 
-**Terminado cuando:** se puede etiquetar desde la fila de una transacción y
-filtrar el historial por etiqueta.
+**Qué hace falta, por orden:**
+
+1. **Asignar** desde la fila de una transacción (selector múltiple).
+2. **Filtrar** el historial por etiqueta, junto a los filtros que ya hay.
+3. **Etiquetado masivo**: seleccionar varias transacciones y marcarlas de una
+   vez. Con 1.760 movimientos, hacerlo de una en una no es viable.
+4. **Sugerencias automáticas** a partir de los datos reales. Candidatas
+   detectadas en el histórico:
+
+   | Etiqueta | Por qué | Cómo detectarla |
+   |---|---|---|
+   | `Diana` | 14 movimientos con ella | contraparte contiene "Diana" |
+   | `Fuxion` | negocio propio: hay ingresos por venta y gastos por producto y eventos | categoría contiene "Fuxion" |
+   | `Trabajo` | los pasajes recurrentes (32 movimientos, la mayor partida de gasto) | categoría "Pasajes" |
+   | `Préstamos` | dinero prestado y devuelto, en ambas direcciones | categoría contiene "Prestado" o "Deudas" |
+
+   **Ojo:** una etiqueta que se solapa al 100% con una categoría no aporta
+   nada — la gracia de las etiquetas es que **cruzan** categorías. `Fuxion` y
+   `Diana` sí cruzan (tocan comida, transporte e ingresos a la vez);
+   `Trabajo` habría que revisarlo antes de crearlo.
+
+**Terminado cuando:** se puede etiquetar desde la fila de una transacción,
+filtrar el historial por etiqueta, y las estadísticas por etiqueta muestran
+algo real.
 
 ---
 

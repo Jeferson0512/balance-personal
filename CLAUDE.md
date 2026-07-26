@@ -93,8 +93,13 @@ pendiente" en el mismo commit.
 
 ## Estado
 
-MVP completo y funcionando con **1,760 transacciones reales** (mayo 2024 –
+MVP completo con **1.760 transacciones reales** (mayo 2024 –
 julio 2026). Ver `docs/09-pendientes.md` para lo que falta.
 
 **Aviso:** `src/datos/historico.js` contiene movimientos financieros reales
 con nombres de personas, y el repositorio es público.
+
+**Última sesión:** 26 jul 2026. Se interrumpió por cambio de máquina, con todo
+publicado. El siguiente paso previsto son las **etiquetas** (pendiente 2.4):
+hoy se crean pero no se pueden asignar a ninguna transacción. Ver
+"Por dónde retomar" en `docs/09-pendientes.md`.
