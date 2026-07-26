@@ -45,7 +45,7 @@ const KEYS = {
 /* Subir este número descarta lo guardado y recarga el histórico del repo.
    Es la vía para reemplazar datos de pruebas por el punto de partida real
    sin pedirle al usuario que limpie el navegador a mano. */
-const VERSION_DATOS = 2;
+const VERSION_DATOS = 4;
 
 /* El plan de cuentas por defecto puede crecer entre versiones. Las cuentas
    guardadas mandan (el usuario pudo renombrarlas), pero las nuevas del default

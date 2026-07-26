@@ -9,6 +9,7 @@ export const CUENTAS_DEFAULT = [
   { id: "a-plin", nombre: "PLIN", tipo: "activo", idPadre: null, activa: true, instrumento: "billetera" },
   { id: "a-efectybank", nombre: "Efectybank", tipo: "activo", idPadre: null, activa: true, instrumento: "billetera" },
   { id: "a-efectivo", nombre: "Efectivo", tipo: "activo", idPadre: null, activa: true, instrumento: "efectivo" },
+  { id: "a-chanchito", nombre: "Chanchito Interbank", tipo: "activo", idPadre: null, activa: true, instrumento: "ahorros" },
 
   // Inversión: aportar aquí mueve patrimonio entre cuentas propias, no lo gasta.
   { id: "a-inversiones", nombre: "Inversiones", tipo: "activo", idPadre: null, activa: true, instrumento: "inversion" },
